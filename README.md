@@ -1,17 +1,21 @@
 BitJASM
 =======
 
-An assembler for the BitJam architecture. Documentation and a reference implementation for BitJam are coming soon.
+An assembler for the BitJam architecture. 
+
+Documentation and a reference implementation for BitJam are coming soon.
 
 Usage:
 ------
 
-`python bitjam.py < my_program.jasm`
+`python bitjasm.py < my_program.jasm`
+
+The assembled program is output to STDOUT in ASCII format with comments. A future BitJASM release will allow for raw binary output.
 
 Example:
 -------
 
-````
+```
 ➜ cat ~/pi_squared.jasm
 LOAD 0x3f800000 -> B
 LOAD B -> C
