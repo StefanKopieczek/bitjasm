@@ -36,7 +36,7 @@ grammar = r"""
     bitmask_jump : JUMP_COMMAND jump_destination "IF"i argument "HAS"i ANY_ALL argument BIT_VALUE
 
     jump_destination : argument | LABEL
-    LABEL : /[a-zA-Z_][a-zA-Z0-9_-]*/
+    LABEL : /(?!(A|B|C|D|E|F|G|H|I|J|FL|IE|EF|S|ALU_OUT)$)[a-zA-Z_][a-zA-Z0-9_-]*/
 
     comparison : argument comparator argument sign_indication?
     comparator: GT | LT | EQU | GTE | LTE | NEQ
@@ -629,15 +629,4 @@ def assemble(code):
 
 
 if __name__ == '__main__':
-  # Example usage
-  assembly_code = """
-  LOAD 1 -> A
-  LOAD A -> B
-  loop:
-      LOAD A -> C
-      ADD A, B -> A
-      LOAD C -> B
-  JUMP loop
-  """
-
-  machine_code = assemble(assembly_code)
+  assemble(sys.stdin.read())
