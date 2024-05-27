@@ -76,9 +76,9 @@ grammar = r"""
     NEQ : "!="
 
     unary_operation : UNARY_OPERATION
-    UNARY_OPERATION : "NEG"i | "NOT"i | "FNEG"i
+    UNARY_OPERATION : "NEG"i | "NOT"i | "FLNEG"i
     binary_operation : BINARY_OPERATION
-    BINARY_OPERATION : "ADD"i | "SUB"i | "MUL"i | "IMUL"i | "DIV"i | "IDIV"i | "MOD"i | "AND"i | "OR"i | "XOR"i | "LSHIFT"i | "RSHIFT"i | "LASHIFT"i | "LRSHIFT"i | "LROT"i | "RROT"i | "FLADD"i | "FLSUB"i | "FMUL"i | "FDIV"i
+    BINARY_OPERATION : "ADD"i | "SUB"i | "MUL"i | "IMUL"i | "DIV"i | "IDIV"i | "MOD"i | "AND"i | "OR"i | "XOR"i | "LSHIFT"i | "RSHIFT"i | "LASHIFT"i | "LRSHIFT"i | "LROT"i | "RROT"i | "FLADD"i | "FLSUB"i | "FLMUL"i | "FLDIV"i
     POINTER : "*"
 
     memory_addr : /(0[xX])[a-fA-F0-9]{1,8}/
@@ -227,9 +227,9 @@ class AluOperator(IntEnum):
     RROT = auto()
     FLADD = auto()
     FLSUB = auto()
-    FMUL = auto()
-    FDIV = auto()
-    FNEG = auto()
+    FLMUL = auto()
+    FLDIV = auto()
+    FLNEG = auto()
 
     def get_code_bits(self) -> Bits:
         return Bits(f'uint:5={int(self)}')
