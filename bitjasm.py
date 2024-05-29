@@ -190,8 +190,8 @@ class LoadOperation:
             Bits('uint:10=0') +
             Bits(f'uint:4={self.arg.mask}') +
             Bits(f'int:3={self.arg.shift}') +
-            self.arg.ref.get_location_bits() +
             Bits(f'bin={1 if self.dest.preserve_bits else 0}') +
+            self.arg.ref.get_location_bits() +
             self.dest.ref.get_location_bits()
         )
 
