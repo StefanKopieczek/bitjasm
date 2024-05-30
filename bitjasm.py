@@ -166,10 +166,10 @@ class LoadArg:
         if self.shift:
             if self.mask != 0b1111:
                 s = f'({s})'
-            if self.shift > 0:
-                s = f'{s} << {shift}'
+            if self.shift >= 0:
+                s = f'{s} << {self.shift}'
             else:
-                s = f'{s} >> {-shift}'
+                s = f'{s} >> {-self.shift}'
         return s
 
 
@@ -664,7 +664,7 @@ def format_line(word: Bits, line_number: int, original : Optional[AssemblyLine] 
         return f'0x{word.hex}{comment}'
     elif mode == 'vivado':
         comment = f'  // {original}' if original else ''
-        return f'        flipflops[{line_number}] = 32\'h{word.hex};{comment}'
+        return f'        flipflops[{line_number - 0x50}] = 32\'h{word.hex};{comment}'
     else:
         raise Exception(f'Unknown format: "{mode}"')
 
