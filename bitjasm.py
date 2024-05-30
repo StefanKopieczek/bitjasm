@@ -8,9 +8,12 @@ import sys
 
 grammar = r"""
     program : assembly_line*
-    assembly_line : (LABEL ":")? operation
+    assembly_line : (LABEL ":")? directive
 
+    ?directive : operation | org_directive
     ?operation : alu_operation | load_operation | jump_operation
+
+    org_directive : "ORG" memory_addr
 
     ?jump_operation : unconditional_jump | comparison_jump | bitmask_jump
 
@@ -431,15 +434,29 @@ Operation = AluOperation | LoadOperation | UnconditionalJump | BitmaskJump | Com
 
 
 @dataclass
+class OrgDirective:
+    addr: Literal
+
+    def __str__(self) -> str:
+        return f'ORG {addr}'
+
+    def word_length(self) -> int:
+        return 0
+
+
+Directive = OrgDirective | Operation
+
+
+@dataclass
 class AssemblyLine:
-    operation: Operation
+    directive: Directive
     label: Optional[str]
 
     def __str__(self):
         if self.label:
-            return f'{self.label}: {self.operation}'
+            return f'{self.label}: {self.directive}'
         else:
-            return str(self.operation)
+            return str(self.directive)
 
 
 def locations_to_words(label_dict: dict[str, Literal], *locations: Union[Location, JumpDestination]) -> [Bits]:
@@ -588,25 +605,32 @@ class AssemblyTransformer(Transformer):
             comparison=items[2]
         )
 
+    def org_directive(self, items):
+        return OrgDirective(addr=items[0])
+
 
     def assembly_line(self, items):
         if len(items) > 1:
-            return AssemblyLine(operation=items[1], label=str(items[0]))
+            return AssemblyLine(directive=items[1], label=str(items[0]))
         else:
-            return AssemblyLine(operation=items[0], label=None)
+            return AssemblyLine(directive=items[0], label=None)
 
 
     def program(self, items):
         return items
 
 
-def build_label_dict(assembly_lines: [AssemblyLine], offset=0) -> dict[str, Literal]:
+def build_label_dict(assembly_lines: [AssemblyLine]) -> dict[str, Literal]:
     label_dict: dict[str, Literal] = {}
-    words_seen = 0
+    address = 0
     for line in assembly_lines:
+        match line.directive:
+            case OrgDirective(Literal(new_addr)):
+                address = new_addr
+
         if line.label is not None:
-            label_dict[line.label] = Literal(words_seen + offset)
-        words_seen += line.operation.word_length()
+            label_dict[line.label] = Literal(address)
+        address += line.directive.word_length()
 
     return label_dict
 
@@ -622,12 +646,16 @@ def assemble(code, mode='hex'):
 
     line_number = 0
     for assembly_line in parsed_lines:
-        operation = assembly_line.operation
-        for idx, word in enumerate(operation.get_words(label_dict)):
-            original_code = assembly_line if idx == 0 else None
-            output = format_line(word, line_number, original=original_code, mode=mode)
-            print(output)
-            line_number += 1
+        directive = assembly_line.directive
+        match directive:
+            case OrgDirective(Literal(new_address)):
+                line_number = new_address
+            case _:
+                for idx, word in enumerate(directive.get_words(label_dict)):
+                    original_code = assembly_line if idx == 0 else None
+                    output = format_line(word, line_number, original=original_code, mode=mode)
+                    print(output)
+                    line_number += 1
 
 
 def format_line(word: Bits, line_number: int, original : Optional[AssemblyLine] = None, mode: str ='hex'):
