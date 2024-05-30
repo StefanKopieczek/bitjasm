@@ -611,7 +611,7 @@ def build_label_dict(assembly_lines: [AssemblyLine], offset=0) -> dict[str, Lite
     return label_dict
 
 
-def assemble(code):
+def assemble(code, mode='hex'):
     parser = Lark(grammar, start='program')
     transformer = AssemblyTransformer()
 
@@ -619,14 +619,32 @@ def assemble(code):
     tree = parser.parse(code.strip())
     parsed_lines = transformer.transform(tree)
     label_dict = build_label_dict(parsed_lines)
+
+    line_number = 0
     for assembly_line in parsed_lines:
         operation = assembly_line.operation
         for idx, word in enumerate(operation.get_words(label_dict)):
-            if idx == 0:
-                print(f'0x{word.hex}  # {assembly_line}')
-            else:
-                print(f'0x{word.hex}')
+            original_code = assembly_line if idx == 0 else None
+            output = format_line(word, line_number, original=original_code, mode=mode)
+            print(output)
+            line_number += 1
+
+
+def format_line(word: Bits, line_number: int, original : Optional[AssemblyLine] = None, mode: str ='hex'):
+    if mode == 'hex':
+        comment = f'  # {original}' if original else ''
+        return f'0x{word.hex}{comment}'
+    elif mode == 'vivado':
+        comment = f'  // {original}' if original else ''
+        return f'        flipflops[{line_number}] = 32\'h{word.hex};{comment}'
+    else:
+        raise Exception(f'Unknown format: "{mode}"')
 
 
 if __name__ == '__main__':
-  assemble(sys.stdin.read())
+    if len(sys.argv) > 1 and sys.argv[1] == '--vivado':
+        mode = 'vivado'
+    else:
+        mode = 'hex'
+
+    assemble(sys.stdin.read(), mode=mode)
